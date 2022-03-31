@@ -782,9 +782,6 @@ void BindImperative(py::module *m_ptr) {
               const auto &tracer = imperative::GetCurrentTracer();
 
               if (tracer->HasGrad()) {
-                std::cout << "leaf = " << self->IsLeaf() << std::endl;
-                std::cout << "stop = " << self->OverridedStopGradient() << std::endl;
-
                 PADDLE_ENFORCE_EQ(
                     self->IsLeaf() && !self->OverridedStopGradient(), false,
                     platform::errors::InvalidArgument(
