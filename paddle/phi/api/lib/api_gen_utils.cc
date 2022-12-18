@@ -13,7 +13,9 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "paddle/phi/api/lib/api_gen_utils.h"
-
+#include "paddle/fluid/memory/allocation/allocator_facade.h"
+#include "paddle/fluid/platform/place.h"
+#include "paddle/phi/backends/gpu/gpu_context.h"
 namespace paddle {
 namespace experimental {
 
@@ -287,6 +289,16 @@ phi::TensorBase* SetStringsKernelOutput(Tensor* out, TensorType type) {
     }
   }
   return out->impl().get();
+}
+
+void CheckAllocationRecordStream(phi::DeviceContext* ctx,
+                                 const phi::DenseTensor& tensor) {
+  auto allocation = tensor.Holder();
+  if (paddle::platform::is_gpu_place(allocation->place()) &&
+      paddle::platform::is_gpu_place(ctx->GetPlace())) {
+    paddle::memory::RecordStream(allocation,
+                                 dynamic_cast<phi::GPUContext*>(ctx)->stream());
+  }
 }
 
 }  // namespace experimental
