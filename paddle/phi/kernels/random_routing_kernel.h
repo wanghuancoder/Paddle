@@ -1,4 +1,4 @@
-// Copyright (c) 2021 PaddlePaddle Authors. All Rights Reserved.
+// Copyright (c) 2023 PaddlePaddle Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #pragma once
 
-#include "paddle/fluid/framework/new_executor/garbage_collector/garbage_collector.h"
+#include "paddle/phi/common/scalar.h"
+#include "paddle/phi/core/dense_tensor.h"
 
-namespace paddle {
-namespace framework {
+namespace phi {
 
-class InterpreterCoreFastGarbageCollector
-    : public InterpreterCoreGarbageCollector {
- public:
-  void Add(Variable* var, const Instruction& instr) override;
+template <typename T, typename Context>
+void RandomRoutingKernel(const Context& dev_ctx,
+                         const DenseTensor& prob,
+                         const DenseTensor& topk_value,
+                         const DenseTensor& topk_idx,
+                         DenseTensor* out);
 
-  void Add(Variable* var, const InstructionBase* instr) override;
-
- private:
-  void Add(Variable* var);
-  void Add(Garbage garbage);
-};
-}  // namespace framework
-}  // namespace paddle
+}  // namespace phi
