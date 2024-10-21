@@ -166,8 +166,8 @@ limitations under the License. */
 #endif
 
 #ifdef PADDLE_WITH_XPU
-#include "paddle/fluid/platform/device/xpu/xpu_op_list.h"
 #include "paddle/phi/core/platform/device/xpu/xpu_info.h"
+#include "paddle/phi/core/platform/device/xpu/xpu_op_list.h"
 #endif
 
 #ifdef PADDLE_WITH_CUSTOM_DEVICE
@@ -2472,12 +2472,6 @@ All parameter, weight, gradient are variables in Paddle.
         static_cast<void (*)(  // NOLINT
             Scope *,
             const phi::DenseTensor &,
-            const std::string &,
-            size_t)>(&framework::SetFeedVariable));
-  m.def("set_feed_variable",
-        static_cast<void (*)(  // NOLINT
-            Scope *,
-            const std::vector<std::string> &,
             const std::string &,
             size_t)>(&framework::SetFeedVariable));
   m.def("get_fetch_variable",
