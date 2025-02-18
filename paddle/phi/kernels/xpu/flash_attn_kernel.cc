@@ -372,6 +372,50 @@ void FlashAttnUnpaddedKernel(
 }
 
 template <typename T, typename Context>
+void FlashAttnUnpaddedWithTensorKernel(
+    const Context& ctx,
+    const DenseTensor& q,
+    const DenseTensor& k,
+    const DenseTensor& v,
+    const DenseTensor& cu_seqlens_q,
+    const DenseTensor& cu_seqlens_k,
+    const paddle::optional<DenseTensor>& fixed_seed_offset,
+    const paddle::optional<DenseTensor>& attn_mask,
+    const DenseTensor& max_seqlen_q,
+    const DenseTensor& max_seqlen_k,
+    float scale,
+    float dropout,
+    bool causal,
+    bool return_softmax,
+    bool is_test,
+    const std::string& rng_name,
+    DenseTensor* out,
+    DenseTensor* softmax,
+    DenseTensor* softmax_lse,
+    DenseTensor* seed_offset) {
+  FlashAttnUnpaddedKernel<T, Context>(ctx,
+                                      q,
+                                      k,
+                                      v,
+                                      cu_seqlens_q,
+                                      cu_seqlens_k,
+                                      fixed_seed_offset,
+                                      attn_mask,
+                                      Scalar(max_seqlen_q).to<int64_t>(),
+                                      Scalar(max_seqlen_k).to<int64_t>(),
+                                      scale,
+                                      dropout,
+                                      causal,
+                                      return_softmax,
+                                      is_test,
+                                      rng_name,
+                                      out,
+                                      softmax,
+                                      softmax_lse,
+                                      seed_offset);
+}
+
+template <typename T, typename Context>
 void FlashAttnKernel(const Context& ctx,
                      const DenseTensor& q,
                      const DenseTensor& k,
@@ -457,6 +501,19 @@ PD_REGISTER_KERNEL(flash_attn_unpadded,
                    XPU,
                    ALL_LAYOUT,
                    phi::FlashAttnUnpaddedKernel,
+                   float,
+                   phi::dtype::float16,
+                   phi::dtype::bfloat16) {
+  kernel->InputAt(3).SetBackend(phi::Backend::CPU);  // cu_seqlens_q
+  kernel->InputAt(4).SetBackend(phi::Backend::CPU);  // cu_seqlens_k
+  kernel->InputAt(5).SetBackend(
+      phi::Backend::ALL_BACKEND);  // fixed_seed_offset
+}
+
+PD_REGISTER_KERNEL(flash_attn_unpadded_with_tensor,
+                   XPU,
+                   ALL_LAYOUT,
+                   phi::FlashAttnUnpaddedWithTensorKernel,
                    float,
                    phi::dtype::float16,
                    phi::dtype::bfloat16) {

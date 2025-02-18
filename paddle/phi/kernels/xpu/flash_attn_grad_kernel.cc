@@ -241,6 +241,48 @@ void FlashAttnUnpaddedGradKernel(const Context& ctx,
 }
 
 template <typename T, typename Context>
+void FlashAttnUnpaddedWithTensorGradKernel(
+    const Context& ctx,
+    const DenseTensor& q,
+    const DenseTensor& k,
+    const DenseTensor& v,
+    const DenseTensor& cu_seqlens_q,
+    const DenseTensor& cu_seqlens_k,
+    const DenseTensor& out,
+    const DenseTensor& softmax_lse,
+    const DenseTensor& seed_offset,
+    const paddle::optional<DenseTensor>& attn_mask,
+    const DenseTensor& max_seqlen_q,
+    const DenseTensor& max_seqlen_k,
+    const DenseTensor& dout,
+    float scale,
+    float dropout,
+    bool causal,
+    DenseTensor* dq,
+    DenseTensor* dk,
+    DenseTensor* dv) {
+  FlashAttnUnpaddedGradKernel<T, Context>(ctx,
+                                          q,
+                                          k,
+                                          v,
+                                          cu_seqlens_q,
+                                          cu_seqlens_k,
+                                          out,
+                                          softmax_lse,
+                                          seed_offset,
+                                          attn_mask,
+                                          dout,
+                                          Scalar(max_seqlen_q).to<int64_t>(),
+                                          Scalar(max_seqlen_k).to<int64_t>(),
+                                          scale,
+                                          dropout,
+                                          causal,
+                                          dq,
+                                          dk,
+                                          dv);
+}
+
+template <typename T, typename Context>
 void FlashAttnGradKernel(const Context& ctx,
                          const DenseTensor& q,
                          const DenseTensor& k,
@@ -326,6 +368,17 @@ PD_REGISTER_KERNEL(flash_attn_unpadded_grad,
                    XPU,
                    ALL_LAYOUT,
                    phi::FlashAttnUnpaddedGradKernel,
+                   float,
+                   phi::dtype::float16,
+                   phi::dtype::bfloat16) {
+  kernel->InputAt(3).SetBackend(phi::Backend::CPU);          // cu_seqlens_q
+  kernel->InputAt(4).SetBackend(phi::Backend::CPU);          // cu_seqlens_k
+  kernel->InputAt(7).SetBackend(phi::Backend::ALL_BACKEND);  // seed_offset
+}
+PD_REGISTER_KERNEL(flash_attn_unpadded_with_tensor_grad,
+                   XPU,
+                   ALL_LAYOUT,
+                   phi::FlashAttnUnpaddedWithTensorGradKernel,
                    float,
                    phi::dtype::float16,
                    phi::dtype::bfloat16) {

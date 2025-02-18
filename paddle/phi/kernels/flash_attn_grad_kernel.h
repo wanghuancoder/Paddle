@@ -41,6 +41,28 @@ void FlashAttnUnpaddedGradKernel(const Context& ctx,
                                  DenseTensor* dv);
 
 template <typename T, typename Context>
+void FlashAttnUnpaddedWithTensorGradKernel(
+    const Context& ctx,
+    const DenseTensor& q,
+    const DenseTensor& k,
+    const DenseTensor& v,
+    const DenseTensor& cu_seqlens_q,
+    const DenseTensor& cu_seqlens_k,
+    const DenseTensor& out,
+    const DenseTensor& softmax_lse,
+    const DenseTensor& seed_offset,
+    const paddle::optional<DenseTensor>& attn_mask,
+    const DenseTensor& max_seqlen_q,
+    const DenseTensor& max_seqlen_k,
+    const DenseTensor& dout,
+    float scale,
+    float dropout,
+    bool causal,
+    DenseTensor* dq,
+    DenseTensor* dk,
+    DenseTensor* dv);
+
+template <typename T, typename Context>
 void FlashAttnGradKernel(const Context& ctx,
                          const DenseTensor& q,
                          const DenseTensor& k,
