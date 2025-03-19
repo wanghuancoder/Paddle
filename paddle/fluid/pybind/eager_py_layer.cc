@@ -131,6 +131,7 @@ PyObject* pylayer_method_apply(PyObject* cls,
                                PyObject* kwargs) {
   EAGER_TRY
   VLOG(6) << "Begin run PyLayer apply...";
+  std::cout << "PyLayer forward is called......................................." << std::endl;
   PyObject* backward_function =
       PyObject_GetAttrString(cls, "_backward_function");
   if (!backward_function) {
@@ -471,6 +472,7 @@ PyObject* pylayer_method_apply(PyObject* cls,
                                                outputs_autograd_meta.size(),
                                                inputs_autograd_meta.size());
     ctx->grad_node = grad_node;
+    egr::Controller::Instance().PushBackForceSequentialNodes(grad_node.get());
 
     if (ctx->materialize_grads) {
       grad_node->SaveForwardOutputsMeta(outputs_tensor);
@@ -520,6 +522,8 @@ PyObject* pylayer_method_apply(PyObject* cls,
   Py_XDECREF(backward_function);
   Py_XDECREF(forward_fn);
   Py_XDECREF(ctx);
+
+  std::cout << "PyLayer forward is finish......................................." << std::endl;
 
   return outputs;
   EAGER_CATCH_AND_THROW_RETURN_NULL

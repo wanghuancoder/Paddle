@@ -113,6 +113,10 @@ void SyncBatchNormKernel(const Context& ctx,
     if (comm) {
       int dtype = phi::ToNCCLDataType(mean_out->dtype());
       // In-place operation
+      std::cout << "sync bn " << C << " " << dtype << " " << x.dims() << " " << x_d << std::endl;
+      ctx.Wait();
+      std::cout << "sync bn 2 " << C << " " << dtype << " " << x.dims() << " " << x_d << std::endl;
+
       PADDLE_ENFORCE_GPU_SUCCESS(
           phi::dynload::ncclAllReduce(stats,
                                       stats,
@@ -121,6 +125,10 @@ void SyncBatchNormKernel(const Context& ctx,
                                       ncclSum,
                                       comm,
                                       stream));
+      std::cout << "sync bn 3 " << C << " " << dtype << " " << x.dims() << " " << x_d << std::endl;
+      ctx.Wait();
+      std::cout << "sync bn 4 " << C << " " << dtype << " " << x.dims() << " " << x_d << std::endl;
+
       VLOG(3) << "Sync result using all reduce";
     }
 #endif

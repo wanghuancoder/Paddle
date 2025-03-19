@@ -587,6 +587,10 @@ void SyncBatchNormGradFunctor(
   if (comm) {
     int dtype = paddle::platform::ToNCCLDataType(scale.dtype());
     // In-place operation
+      std::cout << "sync bn grad " << C << " " << dtype << " " << x->dims() << " " << x_d << std::endl;
+      ctx.Wait();
+      std::cout << "sync bn grad 2 " << C << " " << dtype << " " << x->dims() << " " << x_d << std::endl;
+
     PADDLE_ENFORCE_GPU_SUCCESS(
         phi::dynload::ncclAllReduce(stats,
                                     stats,
@@ -595,6 +599,10 @@ void SyncBatchNormGradFunctor(
                                     ncclSum,
                                     comm,
                                     stream));
+      std::cout << "sync bn grad 3 " << C << " " << dtype << " " << x->dims() << " " << x_d << std::endl;
+      ctx.Wait();
+      std::cout << "sync bn grad 4 " << C << " " << dtype << " " << x->dims() << " " << x_d << std::endl;
+
     VLOG(3) << "Sync result using all reduce";
   }
 #endif

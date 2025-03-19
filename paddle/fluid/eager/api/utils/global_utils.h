@@ -24,6 +24,7 @@
 #include "paddle/phi/api/ext/op_meta_info.h"
 #include "paddle/utils/small_vector.h"
 #include "paddle/utils/test_macros.h"
+
 namespace egr {
 class UniqueNameGenerator {
  public:
@@ -118,17 +119,12 @@ class Controller {
     return final_backward_hooks_;
   }
 
-  void ClearFinalBackwardHooks() { final_backward_hooks_.clear(); }
+  void ClearFinalBackwardHooks() { final_backward_hooks_.clear();}
 
-  void ClearForceSequentialNodes() {
-    while (!force_sequential_nodes_.empty()) {
-      force_sequential_nodes_.pop();
-    }
-  }
-  void PushBackForceSequentialNodes(GradNodeBase* node) {
-    force_sequential_nodes_.push(node);
-  }
-  std::queue<GradNodeBase*> GetForceSequentialNodes() {
+  void ClearForceSequentialNodes();
+  void PushBackForceSequentialNodes(GradNodeBase* node);
+  void EraseForceSequentialNodes(GradNodeBase* node);
+  std::list<GradNodeBase*> GetForceSequentialNodes() {
     return force_sequential_nodes_;
   }
 
@@ -144,7 +140,7 @@ class Controller {
                      std::vector<std::vector<std::unordered_map<int, int>>>>
       custom_edges_slot_map_;
   std::vector<std::shared_ptr<VoidHook>> final_backward_hooks_;
-  std::queue<GradNodeBase*> force_sequential_nodes_;
+  std::list<GradNodeBase*> force_sequential_nodes_;
   DISABLE_COPY_AND_ASSIGN(Controller);
 };
 

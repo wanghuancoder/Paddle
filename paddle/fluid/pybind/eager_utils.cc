@@ -307,7 +307,6 @@ std::shared_ptr<imperative::VarBase> CastPyArg2VarBase(PyObject* obj,
 }
 
 void SetPythonStack() {
-  if (FLAGS_check_nan_inf && FLAGS_check_nan_inf_level == 0) {
     VLOG(4) << "this is SetPythonStack";
     pybind11::gil_scoped_acquire gil;
     PyObject* mod = PyImport_ImportModule("traceback");
@@ -317,9 +316,13 @@ void SetPythonStack() {
       PyObject* line = PyList_GetItem(traceback_list, i);
       str += py::str(PyUnicode_AsUTF8(line));
     }
-    std::string last = str + egr::Controller::Instance().GetPythonStack();
+    for (size_t i = 0; i < str.size(); i++) {
+      if (str[i] == '\n') {
+        str[i] = ' ';
+      }
+    }
+    std::string last = str;
     egr::Controller::Instance().SetPythonStack(last);
-  }
 }
 
 std::shared_ptr<jit::Function> CastPyArg2JitFunction(PyObject* obj,

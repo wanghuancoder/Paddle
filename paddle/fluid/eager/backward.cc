@@ -17,6 +17,7 @@
 #include "paddle/fluid/eager/general_grad.h"
 #include "paddle/fluid/memory/stats.h"
 #include "paddle/phi/kernels/autotune/switch_autotune.h"
+#include "paddle/fluid/eager/api/manual/eager_manual/nodes/nodes.h"
 
 namespace egr {
 
@@ -222,7 +223,7 @@ std::vector<paddle::Tensor> RunBackward(
   std::unordered_map<GradNodeBase*, int> node_in_degree_map =
       getInDegreeMap(queue);
 
-  std::queue<GradNodeBase*> force_sequential_nodes_forward_queue =
+  std::list<GradNodeBase*> force_sequential_nodes_forward_queue =
       egr::Controller::Instance().GetForceSequentialNodes();
   std::deque<GradNodeBase*> force_sequential_nodes_queue;
   std::set<GradNodeBase*> force_sequential_nodes_set;
@@ -236,9 +237,19 @@ std::vector<paddle::Tensor> RunBackward(
           force_sequential_nodes_forward_queue.front());
       force_sequential_nodes_queue.push_front(
           force_sequential_nodes_forward_queue.front());
+      auto tmp_node = force_sequential_nodes_forward_queue.front();
+      if (dynamic_cast<SyncBatchNormGradNode*>(tmp_node)) {
+        std::cout << "backward call node: " << tmp_node << " shape=" << dynamic_cast<SyncBatchNormGradNode*>(tmp_node)->x_.get_intermidiate_tensor().dims() << " data=" << dynamic_cast<SyncBatchNormGradNode*>(tmp_node)->x_.get_intermidiate_tensor().data() << "   " << tmp_node->GetForwardTrace() << std::endl;
+      } else {
+        std::cout << "backward call node: " << tmp_node << " ,name=" << tmp_node->name() << std::endl;
+      }
     }
-    force_sequential_nodes_forward_queue.pop();
+    force_sequential_nodes_forward_queue.pop_front();
   }
+
+  std::cout << "force_sequential_nodes_size = " << force_sequential_nodes_size << std::endl;
+  std::cout << "force_sequential_nodes_queue_size = " << force_sequential_nodes_queue.size() << std::endl;
+  std::cout << "queue.size() = " << queue.size() << std::endl;
 
   VLOG(5) << "Startup_ops's size is " << queue.size();
 
@@ -249,7 +260,9 @@ std::vector<paddle::Tensor> RunBackward(
   //    |- node(grads)
   //    |- Prepare for next node
   // 3. Update queue
+  int run_count = 0;
   while (!queue.empty()) {
+    run_count++;
     GradNodeBase* node = queue.front();
     VLOG(3) << "Preparing GradNode:" << node->name() << " addr:" << node;
     paddle::platform::RecordEvent node_record_event(
@@ -413,6 +426,8 @@ std::vector<paddle::Tensor> RunBackward(
     }
     paddle::memory::LogDeviceMemoryStats(place, std::string((*node).name()));
   }
+
+  std::cout << "Finish Backward, run node count = " << run_count << std::endl;
 
   VLOG(7) << "Run Backward Final hook size: "
           << egr::Controller::Instance().FinalBackwardHooks().size();

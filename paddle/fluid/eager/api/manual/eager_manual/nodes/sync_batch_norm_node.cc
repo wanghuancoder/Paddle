@@ -38,6 +38,7 @@ SyncBatchNormGradNode::operator()(
   VLOG(3) << "Running AD API GRAD: "
           << "sync_batch_norm_grad";
   // Fill Zero For GradIn Tensors
+  std::cout << "run sync bn node:" << this->GetForwardTrace() << std::endl;
 
   // Apply Gradient Hooks
   auto hooked_grads = ApplyGradientHooks(grads);

@@ -30,6 +30,7 @@ namespace egr {
 GradNodePyLayer::~GradNodePyLayer() {  // NOLINT
   pybind11::gil_scoped_acquire gil;
   Py_XDECREF(ctx_);
+  egr::Controller::Instance().EraseForceSequentialNodes(this);
 }
 
 paddle::small_vector<std::vector<paddle::Tensor>, kSlotSmallVectorSize>
@@ -40,6 +41,7 @@ GradNodePyLayer::operator()(
     bool is_new_grad) {
   pybind11::gil_scoped_acquire gil;
   VLOG(3) << "Running Eager Backward Node: " << name();
+  std::cout << "PyLayer backward is called......................................." << std::endl;
 
   paddle::small_vector<std::vector<paddle::Tensor>, kSlotSmallVectorSize>
       hooked_grads = GradNodePyLayer::ApplyGradientHooks(grads);
@@ -238,6 +240,7 @@ GradNodePyLayer::operator()(
   Py_XDECREF(ctx_);
   ctx_ = nullptr;
 
+  std::cout << "PyLayer backward is finish......................................." << std::endl;
   return grad_out;
 }
 }  // namespace egr
