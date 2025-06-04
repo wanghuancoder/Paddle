@@ -398,11 +398,6 @@ void DispatchWithDtype(const Context &dev_ctx,
                        float quant_min_bound,
                        DenseTensor *out,
                        NormalVersion) {
-  auto *bias_p = bias.get_ptr();
-  auto *dequant_scales_p = dequant_scales.get_ptr();
-  auto *shift_p = shift.get_ptr();
-  auto *smooth_p = smooth.get_ptr();
-
   const auto &x_dims = x.dims();
   if (bias != nullptr) {
     const auto &bias_dims = bias->dims();
@@ -451,6 +446,11 @@ void DispatchWithDtype(const Context &dev_ctx,
                       common::errors::InvalidArgument(
                           "The smooth must have the same shape as input x."));
   }
+
+  auto *bias_p = bias.get_ptr();
+  auto *dequant_scales_p = dequant_scales.get_ptr();
+  auto *shift_p = shift.get_ptr();
+  auto *smooth_p = smooth.get_ptr();
   if (shift_p != nullptr) {
     DispatchComputeImpl<T>(dev_ctx,
                            x,
